@@ -22,7 +22,7 @@ with_error_reporting do
   parks = %w(animal_kingdom epcot hollywood_studios magic_kingdom)
 
   parks.each do |park_name|
-    queue_times = { "Date" => now }
+    queue_times = { "Date" => now.strftime("%F %T") }
 
     park = wdw.send(park_name)
 
@@ -30,7 +30,7 @@ with_error_reporting do
       queue_times["#{ride.name} (#{humanize(park_name)})"] = ride.queue_time[:posted]
     end
 
-    filename = File.join(dir, "#{park_name}-#{now.year}-#{now.month}.csv")
+    filename = File.join(dir, "#{park_name}-#{now.strftime("%Y-%m")}.csv")
   
     write_headers = !File.exists?(filename)
 
