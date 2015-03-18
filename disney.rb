@@ -6,13 +6,20 @@ Dotenv.load
 
 require "echelon"
 require "csv"
+require "fileutils"
 
 require "./error_notifier"
 require "./utils"
 
 with_error_reporting do
   now = Time.now
-  filename = "disney-#{now.year}-#{now.month}.csv"
+
+  dir = ENV['TARGET_DIRECTORY']
+
+  FileUtils::mkdir_p(dir)
+  filename = File.join(dir, "disney-#{now.year}-#{now.month}.csv")
+  
+
 
   queue_times = { "Date" => now }
 
