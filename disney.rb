@@ -27,7 +27,7 @@ with_error_reporting do
     park = wdw.send(park_name)
 
     park.rides.each do |ride|
-      queue_times["#{ride.name} (#{humanize(park_name)})"] = ride.queue_time[:posted]
+      queue_times["#{ride.name} (#{humanize(park_name)})"] = ride.active == 1 ? ride.queue_time[:posted] : '-'
     end
 
     filename = File.join(dir, "#{park_name}-#{now.strftime("%Y-%m")}.csv")
