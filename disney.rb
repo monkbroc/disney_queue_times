@@ -15,41 +15,28 @@ with_error_reporting do
   now = Time.now
 
   dir = ENV['TARGET_DIRECTORY']
-
   FileUtils::mkdir_p(dir)
-  filename = File.join(dir, "disney-#{now.year}-#{now.month}.csv")
-  
-
-
-  queue_times = { "Date" => now }
 
   # Disney World
   wdw = Echelon::DisneyWorld.new
   parks = %w(animal_kingdom epcot hollywood_studios magic_kingdom)
 
   parks.each do |park_name|
+    queue_times = { "Date" => now }
+
     park = wdw.send(park_name)
 
     park.rides.each do |ride|
       queue_times["#{ride.name} (#{humanize(park_name)})"] = ride.queue_time[:posted]
     end
+
+    filename = File.join(dir, "#{park_name}-#{now.year}-#{now.month}.csv")
+  
+    write_headers = !File.exists?(filename)
+
+    CSV.open(filename, "ab") do |csv|
+      csv << queue_times.keys if write_headers
+      csv << queue_times.values
+    end
   end
-
-  write_headers = !File.exists?(filename)
-
-  CSV.open(filename, "ab") do |csv|
-    csv << queue_times.keys if write_headers
-    csv << queue_times.values
-  end
-
-  # if File.exist?(filename)
-  #   File.open(filename, "ab") do |csv|
-  #     csv << queue_times.values.to_csv
-  #   end
-  # else
-  #   CSV.open(filename, "wb") do |csv|
-  #     csv << queue_times.keys
-  #     csv << queue_times.values
-  #   end
-  # end
 end
