@@ -1,13 +1,37 @@
 require "rollbar"
+require "retries"
 
 Rollbar.configure do |config|
   config.access_token = ENV['ROLLBAR_ACCESS_TOKEN']
   config.environment = `hostname`.strip
 end
 
+def log_errors?
+  !Rollbar.configuration.environment == ENV['DEVELOPMENT_HOSTNAME']
+end
+
 def with_error_reporting
-  yield
-rescue Exception => e
-  Rollbar.error(e) unless Rollbar.configuration.environment == ENV['DEVELOPMENT_HOSTNAME']
+  with_retries retry_params do
+    yield
+  end
+rescue Exception => exception
+  if log_errors?
+    Rollbar.error(exception, "All attempts exhausted")
+  end
   raise
 end
+
+def retry_params
+  {
+    max_retries: 6,
+    base_sleep_seconds: 1,
+    max_sleep_seconds: 60,
+    handler: proc do |exception, attempt_number, total_delay|
+      if log_errors?
+        Rollbar.warning(exception,
+          "Attempt ##{attempt_number}, retrying after #{total_delay}s")
+      end
+    end
+  }
+end
+
