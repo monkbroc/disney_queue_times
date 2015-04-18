@@ -7,23 +7,23 @@ Rollbar.configure do |config|
 end
 
 def log_errors?
-  !Rollbar.configuration.environment == ENV['DEVELOPMENT_HOSTNAME']
+  Rollbar.configuration.environment != ENV['DEVELOPMENT_HOSTNAME']
 end
 
 def with_error_reporting
-  with_retries retry_params do
+  with_retries(retry_params) do
     yield
   end
 rescue Exception => exception
   if log_errors?
-    Rollbar.error(exception, "All attempts exhausted")
+    Rollbar.error(exception)
   end
   raise
 end
 
 def retry_params
   {
-    max_retries: 6,
+    max_tries: 8,
     base_sleep_seconds: 1,
     max_sleep_seconds: 60,
     handler: proc do |exception, attempt_number, total_delay|
